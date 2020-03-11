@@ -1,0 +1,14 @@
+{
+  "name": "com.cerealdevelopment.lifetime",
+  "displayName": "Lifetime",
+  "description": "Objects lifetime management",
+  "unity": "2018.2",
+  "version": "0.9.0",
+  "license": "",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/cerea1/Lifetime.git"
+  },
+  "author": "https://github.com/cerea1",
+  "dependencies": {}
+}
