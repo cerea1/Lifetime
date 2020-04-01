@@ -132,7 +132,7 @@ namespace CerealDevelopment.LifetimeManagement
                 {
                     return (T)cached;
                 }
-                throw new IndexOutOfRangeException();
+                throw new IndexOutOfRangeException(typeof(T).FullName);
             }
         }
 
@@ -194,7 +194,7 @@ namespace CerealDevelopment.LifetimeManagement
                 var indexForSublist = index - cache.Count;
                 for (int i = 0; i < sublists.Count; i++)
                 {
-                    if (sublists[i].cache.Count < indexForSublist)
+                    if (indexForSublist < sublists[i].cache.Count)
                     {
                         cached = sublists[i].cache[indexForSublist];
                         return true;

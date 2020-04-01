@@ -97,7 +97,6 @@ namespace CerealDevelopment.LifetimeManagement
                 if (Application.isPlaying)
                 {
                     IsRunning = true;
-                    Debug.Log(Instance);
                 }
             }
         }
