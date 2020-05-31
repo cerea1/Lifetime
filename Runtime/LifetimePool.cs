@@ -28,20 +28,15 @@ namespace CerealDevelopment.LifetimeManagement
 		}
 
 		private List<ILifetimePoolable> pickPoolables = new List<ILifetimePoolable>();
-		private class Pool
+		private class Pool : IUnityObject
 		{
 			public GameObject prefab;
+			private int prefabInstanceID;
 
 			public Scene targetScene;
 
-			public class PoolObject
-			{
-				public GameObject gameObject;
-				public int instanceID;
-			}
-
-			public List<PoolObject> inPoolObjects;
-			public List<PoolObject> outOfPoolObjects;
+			public UnityList<GameObject> inPoolObjects;
+			public UnityList<GameObject> outOfPoolObjects;
 			private int maxObjects;
 			public int MaxObjects
 			{
@@ -64,10 +59,11 @@ namespace CerealDevelopment.LifetimeManagement
 
 			public Pool(GameObject prefab, Scene targetScene, int maxObjects = 10)
 			{
-				inPoolObjects = new List<PoolObject>();
-				outOfPoolObjects = new List<PoolObject>();
+				inPoolObjects = new UnityList<GameObject>();
+				outOfPoolObjects = new UnityList<GameObject>();
 				this.targetScene = targetScene;
 				this.prefab = prefab;
+				this.prefabInstanceID = prefab.GetInstanceID();
 				this.maxObjects = maxObjects;
 			}
 
@@ -108,11 +104,7 @@ namespace CerealDevelopment.LifetimeManagement
 				{
 					poolable[i].ForceConstruct();
 				}
-				inPoolObjects.Add(new PoolObject
-				{
-					gameObject = newObject,
-					instanceID = newObject.GetInstanceID()
-				});
+				inPoolObjects.Add(newObject);
 			}
 
 			public GameObject GetInstance(Transform parent, Vector3 position, Quaternion rotation)
@@ -126,17 +118,15 @@ namespace CerealDevelopment.LifetimeManagement
 					InstantiateObject();
 				}
 				var lastIndex = inPoolObjects.Count - 1;
-				var targetObjectContainer = inPoolObjects[lastIndex];
-				var targetObject = targetObjectContainer.gameObject;
+				var targetObject = inPoolObjects[lastIndex];
 
-				inPoolObjects.RemoveAt(lastIndex);
+				inPoolObjects.RemoveAtSwapBack(lastIndex);
 				while (targetObject == null && inPoolObjects.Count > 0)
 				{
 					lastIndex = inPoolObjects.Count - 1;
-					targetObjectContainer = inPoolObjects[lastIndex];
-					targetObject = targetObjectContainer.gameObject;
+					targetObject = inPoolObjects[lastIndex];
 
-					inPoolObjects.RemoveAt(lastIndex);
+					inPoolObjects.RemoveAtSwapBack(lastIndex);
 				}
 
 				if(targetObject == null)
@@ -146,12 +136,11 @@ namespace CerealDevelopment.LifetimeManagement
 						InstantiateObject();
 					}
 					lastIndex = inPoolObjects.Count - 1;
-					targetObjectContainer = inPoolObjects[lastIndex];
-					targetObject = targetObjectContainer.gameObject;
+					targetObject = inPoolObjects[lastIndex];
 				}
 
 
-				outOfPoolObjects.Add(targetObjectContainer);
+				outOfPoolObjects.Add(targetObject);
 				if (targetObject.transform.parent != parent)
 				{
 					targetObject.transform.SetParent(parent);
@@ -165,22 +154,13 @@ namespace CerealDevelopment.LifetimeManagement
 
 			public void RestoreInstance(GameObject instance)
 			{
-				var index = -1;
-				var instanceID = instance.GetInstanceID();
-				for (int i = 0; i < outOfPoolObjects.Count && index < 0; i++)
-				{
-					if (outOfPoolObjects[i].instanceID == instanceID)
-					{
-						index = i;
-					}
-				}
-				//int index = outOfPoolObjects.IndexOf(instance);
+				var index = outOfPoolObjects.IndexOf(instance);
 				if (index < 0)
 				{
 					throw new System.ArgumentException();
 				}
 				inPoolObjects.Add(outOfPoolObjects[index]);
-				outOfPoolObjects.RemoveAt(index);
+				outOfPoolObjects.RemoveAtSwapBack(index);
 
 				var poolableComponents = instance.GetComponentsInChildren<ILifetimePoolable>(true);
 				for (int i = 0; i < poolableComponents.Length; i++)
@@ -195,27 +175,17 @@ namespace CerealDevelopment.LifetimeManagement
 
 			public GameObject GetObject(int instanceID)
 			{
-				for (int i = 0; i < outOfPoolObjects.Count; i++)
+				var index = outOfPoolObjects.IndexOf(instanceID);
+				if(index != -1)
 				{
-					if (outOfPoolObjects[i].instanceID == instanceID)
-					{
-						return outOfPoolObjects[i].gameObject;
-					}
+					return outOfPoolObjects[index];
 				}
 				return null;
 			}
 
 			public void RestoreInstance(int instanceID)
 			{
-				var index = -1;
-				for (int i = 0; i < outOfPoolObjects.Count && index < 0; i++)
-				{
-					if (outOfPoolObjects[i].instanceID == instanceID)
-					{
-						index = i;
-					}
-				}
-				//int index = outOfPoolObjects.IndexOf(instance);
+				var index = outOfPoolObjects.IndexOf(instanceID);
 				if (index < 0)
 				{
 					throw new System.ArgumentException();
@@ -223,7 +193,7 @@ namespace CerealDevelopment.LifetimeManagement
 				var poolObject = outOfPoolObjects[index];
 				var instance = poolObject.gameObject;
 				inPoolObjects.Add(poolObject);
-				outOfPoolObjects.RemoveAt(index);
+				outOfPoolObjects.RemoveAtSwapBack(index);
 				//instance.transform.SetParent(poolContainer);
 				RestoreObject(instance);
 
@@ -240,6 +210,11 @@ namespace CerealDevelopment.LifetimeManagement
 			{
 				//TODO: замутить Restore
 			}
+
+			public int GetInstanceID()
+			{
+				return prefabInstanceID;
+			}
 		}
 
 		public List<GameObject> prefabs = new List<GameObject>();
@@ -247,7 +222,7 @@ namespace CerealDevelopment.LifetimeManagement
 		[SerializeField]
 		private int initialSpawnCount = 10;
 
-		private Dictionary<int, Pool> prefabsHashPool = new Dictionary<int, Pool>();
+		private UnityInterfacedList<Pool> prefabsHashPool = new UnityInterfacedList<Pool>();
 		private Dictionary<int, Pool> instancesHashPool = new Dictionary<int, Pool>();
 
 		private Scene poolScene;
@@ -307,9 +282,9 @@ namespace CerealDevelopment.LifetimeManagement
 
 			pickPoolables.Clear();
 
-			foreach (var pool in prefabsHashPool)
+			for(int i = 0; i < prefabsHashPool.Count; i++)
 			{
-				if (pool.Value.PrePopulate())
+				if (prefabsHashPool[i].PrePopulate())
 				{
 					break;
 				}
@@ -323,8 +298,10 @@ namespace CerealDevelopment.LifetimeManagement
 				spawnCount = prefabsPoolInstance.initialSpawnCount;
 			}
 			Pool pool;
-			if (prefabsHashPool.TryGetValue(prefab.GetInstanceID(), out pool))
+			var index = prefabsHashPool.IndexOf(prefab.GetInstanceID());
+			if (index != -1)
 			{
+				pool = prefabsHashPool[index];
 				if (pool.MaxObjects < spawnCount)
 				{
 					pool.MaxObjects = spawnCount;
@@ -333,7 +310,7 @@ namespace CerealDevelopment.LifetimeManagement
 			}
 
 			pool = new Pool(prefab, poolScene, spawnCount);
-			prefabsHashPool.Add(prefab.GetInstanceID(), pool);
+			prefabsHashPool.Add(pool);
 			pool.Populate();
 			return pool;
 		}
@@ -342,9 +319,14 @@ namespace CerealDevelopment.LifetimeManagement
 		{
 			int hash = prefab.GetInstanceID();
 			Pool pool;
-			if (!prefabsHashPool.TryGetValue(hash, out pool))
+			var index = prefabsHashPool.IndexOf(hash);
+			if (index == -1)
 			{
 				pool = AddPool_Private(prefab, initialSpawnCount);
+			}
+			else
+			{
+				pool = prefabsHashPool[index];
 			}
 			var gameObject = pool.GetInstance(parent, position, rotation);
 
@@ -404,11 +386,11 @@ namespace CerealDevelopment.LifetimeManagement
 
 		private bool RestoreInstance_Private(GameObject instance)
 		{
-			int hash = instance.GetInstanceID();
+			int instanceID = instance.GetInstanceID();
 			Pool pool;
-			if (instancesHashPool.TryGetValue(hash, out pool))
+			if (instancesHashPool.TryGetValue(instanceID, out pool))
 			{
-				instancesHashPool.Remove(hash);
+				instancesHashPool.Remove(instanceID);
 				pool.RestoreInstance(instance);
 
 				var poolableComponents = instance.GetComponentsInChildren<ILifetimePoolable>(true);
@@ -421,7 +403,7 @@ namespace CerealDevelopment.LifetimeManagement
 			}
 			else
 			{
-				Debug.LogException(new System.Exception("Cannot find object in pool"), instance);
+				Debug.LogException(new System.Exception($"Cannot find object {instance} in pool"), instance);
 
 				var poolableComponents = instance.GetComponentsInChildren<ILifetimePoolable>(true);
 				for (int i = 0; i < poolableComponents.Length; i++)
