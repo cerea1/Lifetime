@@ -51,7 +51,7 @@ namespace CerealDevelopment.LifetimeManagement
                 return null;
             }
         }
-        private static bool IsRunning = false;
+		private static bool IsRunning = true;
 
         private void Awake()
         {
@@ -386,6 +386,9 @@ namespace CerealDevelopment.LifetimeManagement
 
         private void InitializeTypes()
         {
+			var explicitConstructorFix = new DelegateTree<ILifetime>(typeof(ILifetime));
+			Debug.Log(explicitConstructorFix.GetType().FullName);
+
             availableTypes = new Dictionary<Type, Type[]>();
             var typesList = new List<Type> { typeof(ILifetime) };
 

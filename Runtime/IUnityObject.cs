@@ -1,6 +1,6 @@
 ﻿namespace CerealDevelopment.LifetimeManagement
 {
-	internal interface IUnityObject
+	public interface IUnityObject
 	{
 		int GetInstanceID();
 	}

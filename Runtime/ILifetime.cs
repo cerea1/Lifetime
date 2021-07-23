@@ -11,7 +11,7 @@ namespace CerealDevelopment.LifetimeManagement
     /// </summary>
     /// <seealso cref="Lifetime"/>
     /// <seealso cref="LifetimeMonoBehaviour"/>
-    public interface ILifetime
+    public interface ILifetime : IUnityObject
     {
         /// <summary>
         /// Flags if lifetime object is in active state

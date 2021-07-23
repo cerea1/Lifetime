@@ -9,7 +9,7 @@ namespace CerealDevelopment.LifetimeManagement
     {
         internal abstract event Action<LifetimeListBase, ILifetime, int> ItemAdded;
         internal abstract event Action<LifetimeListBase, ILifetime, int> ItemRemoved;
-        internal List<ILifetime> cache = new List<ILifetime>();
+        internal UnityInterfacedList<ILifetime> cache = new UnityInterfacedList<ILifetime>();
         internal List<LifetimeListBase> sublists = new List<LifetimeListBase>();
 
         internal abstract bool TryGetAtIndex(int index, out ILifetime cached);
