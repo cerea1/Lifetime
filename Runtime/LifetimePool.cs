@@ -33,8 +33,6 @@ namespace CerealDevelopment.LifetimeManagement
 			public GameObject prefab;
 			private int prefabInstanceID;
 
-			public Scene targetScene;
-
 			public UnityList<GameObject> inPoolObjects;
 			public UnityList<GameObject> outOfPoolObjects;
 			private int maxObjects;
@@ -57,11 +55,10 @@ namespace CerealDevelopment.LifetimeManagement
 			private int additionalObjects = 5;
 
 
-			public Pool(GameObject prefab, Scene targetScene, int maxObjects = 10)
+			public Pool(GameObject prefab, int maxObjects = 10)
 			{
 				inPoolObjects = new UnityList<GameObject>();
 				outOfPoolObjects = new UnityList<GameObject>();
-				this.targetScene = targetScene;
 				this.prefab = prefab;
 				this.prefabInstanceID = prefab.GetInstanceID();
 				this.maxObjects = maxObjects;
@@ -93,7 +90,6 @@ namespace CerealDevelopment.LifetimeManagement
 			{
 				var newObject = Instantiate(prefab);
 
-				SceneManager.MoveGameObjectToScene(newObject, targetScene);
 				newObject.SetActive(false);
 #if UNITY_EDITOR
 				newObject.name = prefab.name + "(PoolClone)";
@@ -225,22 +221,10 @@ namespace CerealDevelopment.LifetimeManagement
 		private UnityInterfacedList<Pool> prefabsHashPool = new UnityInterfacedList<Pool>();
 		private Dictionary<int, Pool> instancesHashPool = new Dictionary<int, Pool>();
 
-		private Scene poolScene;
 
 		private void Awake()
 		{
 			_instance = this;
-
-			//poolScene = SceneManager.GetSceneByName("Pool");
-			//if (poolScene == default(Scene))
-			{
-				poolScene = SceneManager.CreateScene("Pool");
-				//SceneManager.LoadSceneAsync(poolScene.name, LoadSceneMode.Additive);
-			}
-
-			//poolContainer = new GameObject().transform;
-			//poolContainer.SetParent(transform);
-			//poolContainer.gameObject.SetActive(false);
 
 			foreach (var prefab in prefabs)
 			{
@@ -253,11 +237,6 @@ namespace CerealDevelopment.LifetimeManagement
 			_instance = null;
 
 			pickPoolables.Clear();
-
-			if (poolScene.isLoaded)
-			{
-				SceneManager.UnloadSceneAsync(poolScene);
-			}
 		}
 
 
@@ -309,7 +288,7 @@ namespace CerealDevelopment.LifetimeManagement
 				return pool;
 			}
 
-			pool = new Pool(prefab, poolScene, spawnCount);
+			pool = new Pool(prefab, spawnCount);
 			prefabsHashPool.Add(pool);
 			pool.Populate();
 			return pool;

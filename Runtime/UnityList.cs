@@ -1,9 +1,10 @@
 ﻿using System.Collections.Generic;
+
 using UnityEngine;
 
 namespace CerealDevelopment.LifetimeManagement
 {
-	internal class UnityList<T> where T : Object
+	public class UnityList<T> where T : Object
 	{
 		public int Count => count;
 		private int count = 0;
@@ -32,14 +33,11 @@ namespace CerealDevelopment.LifetimeManagement
 		public bool AddUnique(T instance)
 		{
 			var id = instance.GetInstanceID();
-			for (int i = 0; i < ids.Count; i++)
+			if (hashIndexSet.TryGetValue(id, out var index))
 			{
-				if (id == ids[i])
-				{
-					return false;
-				}
+				return false;
 			}
-			var index = count;
+			index = count;
 			ids.Add(id);
 			instances.Add(instance);
 			hashIndexSet.Add(id, index);
