@@ -330,7 +330,7 @@ namespace CerealDevelopment.LifetimeManagement
         private T GetCachedInternal<T>() where T : ILifetime
         {
             var tree = delegateTrees[typeof(T)] as DelegateTree<T>;
-            if (tree.lifetimeList.Count > 0)
+            if (tree?.lifetimeList.Count > 0)
             {
                 return tree.lifetimeList[0];
             }
@@ -340,6 +340,9 @@ namespace CerealDevelopment.LifetimeManagement
         private LifetimeList<T> GetCachedListInternal<T>() where T : ILifetime
         {
             var tree = delegateTrees[typeof(T)] as DelegateTree<T>;
+            if ( tree == null ) {
+                return new LifetimeList<T>();
+            }
             return tree.lifetimeList;
         }
 
@@ -465,7 +468,7 @@ namespace CerealDevelopment.LifetimeManagement
                 AddTreeType(availableType.Key);
                 foreach (var value in availableType.Value)
                 {
-                    AddTreeType(availableType.Key);
+                    AddTreeType(value);
                 }
             }
 
