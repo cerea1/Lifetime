@@ -534,8 +534,20 @@ namespace CerealDevelopment.LifetimeManagement
                     {
                         return null;
                     }
-                    var constructor = treeType.GetConstructor(new Type[] { typeof(Type) });
-                    delegateTree = (DelegateTreeBase)(constructor.Invoke(new object[] { type }));
+                    var constructor = treeType.GetConstructor(new Type[] { type });
+                    if ( (constructor == null) && (type is ILifetime) )
+                    {
+                        delegateTree = new DelegateTree<ILifetime>(type);
+                    }
+                    else if ( constructor == null ) 
+                    {
+                        Debug.LogException(new Exception(string.Format("Constructor for '{0}' is null!!!", type)));
+                        return null;
+                    }
+                    else
+                    {
+                        delegateTree = (DelegateTreeBase) (constructor.Invoke(new object[] {type}));
+                    }
                     delegateTrees.Add(type, delegateTree);
 
                     var parent = type.BaseType;
