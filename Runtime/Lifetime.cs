@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-
 using UnityEngine;
+
 
 namespace CerealDevelopment.LifetimeManagement
 {
@@ -11,6 +11,7 @@ namespace CerealDevelopment.LifetimeManagement
 		{
 			Lifetime.AddObserver(instance, observer, forceCachedEvents);
 		}
+
 		public static void RemoveObserver<T>(this T instance, ILifetimeObserver<T> observer, bool forceCachedEvents = true) where T : ILifetime
 		{
 			Lifetime.RemoveObserver(instance, observer, forceCachedEvents);
@@ -28,12 +29,13 @@ namespace CerealDevelopment.LifetimeManagement
 	public sealed class Lifetime : MonoBehaviour
 	{
 		#region Singleton
+
 		internal static Lifetime _instance;
 		internal static Lifetime Instance
 		{
 			get
 			{
-				if (IsRunning)
+				if (Application.isPlaying)
 				{
 					if (_instance == null)
 					{
@@ -56,16 +58,16 @@ namespace CerealDevelopment.LifetimeManagement
 
 		private void Awake()
 		{
-			if (Application.isPlaying)
-			{
-				IsRunning = true;
-			}
 			if (_instance != null && _instance != this)
 			{
 				Destroy(gameObject);
 			}
 			else
 			{
+				if (Application.isPlaying)
+				{
+					IsRunning = true;
+				}
 				_instance = this;
 				DontDestroyOnLoad(_instance.gameObject);
 				if (availableTypes == null)
@@ -82,6 +84,7 @@ namespace CerealDevelopment.LifetimeManagement
 				IsRunning = false;
 			}
 		}
+
 		private void OnApplicationQuit()
 		{
 			if (_instance == this)
@@ -101,6 +104,7 @@ namespace CerealDevelopment.LifetimeManagement
 				}
 			}
 		}
+
 		#endregion
 
 		internal Dictionary<Type, Type[]> availableTypes;
@@ -115,6 +119,7 @@ namespace CerealDevelopment.LifetimeManagement
 				Instance.AddPerceiverInternal<T>(perceiver);
 			}
 		}
+
 		public static void RemovePerceiver<T>(ILifetimePerceiver<T> perceiver) where T : ILifetime
 		{
 			if (IsRunning)
@@ -130,6 +135,7 @@ namespace CerealDevelopment.LifetimeManagement
 				Instance.AddObserverInternal<T>(instance, observer, forceCachedEvents);
 			}
 		}
+
 		public static void RemoveObserver<T>(T instance, ILifetimeObserver<T> observer, bool forceCachedEvents = true) where T : ILifetime
 		{
 			if (IsRunning)
@@ -245,6 +251,7 @@ namespace CerealDevelopment.LifetimeManagement
 				Instance.AddInitializedCallbackInternal<T>(callback);
 			}
 		}
+
 		public static void RemoveInitializedCallback<T>(Action<T> callback) where T : ILifetime
 		{
 			if (IsRunning)
@@ -260,6 +267,7 @@ namespace CerealDevelopment.LifetimeManagement
 				Instance.AddDisposedCallbackInternal<T>(callback);
 			}
 		}
+
 		public static void RemoveDisposedCallback<T>(Action<T> callback) where T : ILifetime
 		{
 			if (IsRunning)
@@ -304,6 +312,7 @@ namespace CerealDevelopment.LifetimeManagement
 				Instance.AddInstanceInitializedCallbackInternal(instance, callback);
 			}
 		}
+
 		public static void AddInstanceDisposedCallback<T>(T instance, Action<T> callback) where T : ILifetime
 		{
 			if (IsRunning)
@@ -311,6 +320,7 @@ namespace CerealDevelopment.LifetimeManagement
 				Instance.AddInstanceDisposedCallbackInternal(instance, callback);
 			}
 		}
+
 		public static void RemoveInstanceInitializedCallback<T>(T instance, Action<T> callback) where T : ILifetime
 		{
 			if (IsRunning)
@@ -318,6 +328,7 @@ namespace CerealDevelopment.LifetimeManagement
 				Instance.RemoveInstanceInitializedCallbackInternal(instance, callback);
 			}
 		}
+
 		public static void RemoveInstanceDisposedCallback<T>(T instance, Action<T> callback) where T : ILifetime
 		{
 			if (IsRunning)
@@ -344,8 +355,6 @@ namespace CerealDevelopment.LifetimeManagement
 			return tree.lifetimeList;
 		}
 
-
-
 		private void AddInitializedCallbackInternal<T>(Action<T> callback) where T : ILifetime
 		{
 			var tree = delegateTrees[typeof(T)];
@@ -371,6 +380,7 @@ namespace CerealDevelopment.LifetimeManagement
 				dictionary.Add(instance, callback);
 			}
 		}
+
 		private void AddInstanceDisposedCallbackInternal<T>(T instance, Action<T> callback) where T : ILifetime
 		{
 			var tree = delegateTrees[typeof(T)];
@@ -610,6 +620,7 @@ namespace CerealDevelopment.LifetimeManagement
 				tree.initializedInstancesDelegate[instance] = Delegate.Remove(@delegate, callback);
 			}
 		}
+
 		private void RemoveInstanceDisposedCallbackInternal<T>(T instance, Action<T> callback) where T : ILifetime
 		{
 			var tree = delegateTrees[typeof(T)];
@@ -678,6 +689,7 @@ namespace CerealDevelopment.LifetimeManagement
 			}
 			return false;
 		}
+
 		internal static void RemoveAtSwapBack<T>(this List<T> list, int index)
 		{
 			if (index == list.Count - 1)

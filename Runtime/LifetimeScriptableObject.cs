@@ -14,8 +14,8 @@ namespace CerealDevelopment.LifetimeManagement
         {
             if (!isLifetimeInitialized)
             {
-                Initialize();
                 isLifetimeInitialized = true;
+                Initialize();
                 Lifetime.OnInitialized(this);
             }
         }

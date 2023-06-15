@@ -1,5 +1,5 @@
 ﻿using System;
-
+using Sirenix.OdinInspector;
 using UnityEngine;
 
 namespace CerealDevelopment.LifetimeManagement
@@ -12,14 +12,14 @@ namespace CerealDevelopment.LifetimeManagement
         /// <summary>
         /// <see cref="Awake"/> invokation flag
         /// </summary>
-        [System.NonSerialized]
         protected bool isLifetimeConstructed = false;
 
         /// <summary>
         /// Lifetime state and <see cref="Start"/> invokation flag
         /// </summary>
-        [System.NonSerialized]
         protected bool isLifetimeInitialized = false;
+
+        private bool isInitializing = false;
 
         /// <summary>
         /// Lifetime state
@@ -59,23 +59,30 @@ namespace CerealDevelopment.LifetimeManagement
             {
                 Awake();
             }
-            if (!isLifetimeInitialized)
+            if (!isLifetimeInitialized && !isInitializing)
             {
+                isInitializing = true;
                 Initialize();
                 FireInitializedEvent();
+                isInitializing = false;
             }
         }
 
         protected void OnDestroy()
         {
-            if (isLifetimeInitialized)
+            if (isLifetimeConstructed)
             {
-                Dispose();
-                FireDisposedEvent();
-            }
+                if (isLifetimeInitialized)
+                {
+                    Dispose();
+                    FireDisposedEvent();
+                }
 
-            Destroy();
-            FireDestroyedEvent();
+                Destroy();
+                FireDestroyedEvent();
+
+                isLifetimeConstructed = false;
+            }
         }
 
         /// <summary>
