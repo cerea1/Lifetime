@@ -372,7 +372,7 @@ namespace CerealDevelopment.LifetimeManagement
 
 		public static T GetInstance<T>(T prefab, Vector3 position, Quaternion rotation) where T : Component     //TODO: намутить конвертеров там всяких
 		{
-			return prefabsPoolInstance.GetInstance_Private(prefab.gameObject, null, prefab.transform.position, prefab.transform.rotation).GetComponent<T>();
+			return prefabsPoolInstance.GetInstance_Private(prefab.gameObject, null, position, rotation).GetComponent<T>();
 		}
 
 		public static T GetInstance<T>(T prefab, Transform parent) where T : Component     //TODO: намутить конвертеров там всяких
